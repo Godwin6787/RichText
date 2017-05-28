@@ -25,6 +25,8 @@ import android.support.annotation.NonNull;
 public interface Markup {
 
     @NonNull String getTag();
-    int getMarkupId();
-    boolean isExclusiveWith(int markupId);
+
+    int getId();
+
+    boolean canExistWith(int markupId);
 }

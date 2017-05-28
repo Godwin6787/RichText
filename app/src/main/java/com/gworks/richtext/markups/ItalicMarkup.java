@@ -37,13 +37,13 @@ public class ItalicMarkup extends StyleSpan implements Markup {
     }
 
     @Override
-    public int getMarkupId() {
+    public int getId() {
         return ID;
     }
 
     @Override
-    public boolean isExclusiveWith(int markupId) {
-        return getMarkupId() != markupId;
+    public boolean canExistWith(int markupId) {
+        return getId() != markupId;
     }
 
 }

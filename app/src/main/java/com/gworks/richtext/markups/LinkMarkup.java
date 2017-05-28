@@ -18,6 +18,7 @@ package com.gworks.richtext.markups;
 
 import android.support.annotation.NonNull;
 import android.text.style.URLSpan;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,8 +28,9 @@ import java.util.Map;
 
 public class LinkMarkup extends URLSpan implements AttributedMarkup {
 
-    private Map<String,String> attributes;
     public static final String ATTR_URL = "url";
+    public static final int ID = 4;
+    private Map<String, String> attributes;
 
     public LinkMarkup(String url) {
         super(url);
@@ -43,13 +45,13 @@ public class LinkMarkup extends URLSpan implements AttributedMarkup {
     }
 
     @Override
-    public int getMarkupId() {
-        return 0;
+    public int getId() {
+        return ID;
     }
 
     @Override
-    public boolean isExclusiveWith(int markupId) {
-        return markupId == getMarkupId();
+    public boolean canExistWith(int markupId) {
+        return markupId != getId();
     }
 
     @NonNull

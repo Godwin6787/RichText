@@ -16,108 +16,111 @@
 
 package com.gworks.richtext.util;
 
+import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.Spanned;
+import android.util.Log;
 import android.widget.EditText;
+
 import com.gworks.richtext.markups.Markup;
+
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
-
 
 public class RichTextManager {
 
+    private static final String TAG = "@RichTextManager";
     private EditText editText;
-    private List<Markup> appliedMarkups;
 
-    public RichTextManager(EditText editText){
-
+    public RichTextManager(EditText editText) {
         this.editText = editText;
-        appliedMarkups = new ArrayList<>();
     }
 
-    public void apply(Class<? extends Markup> markupClass, Object mValue){
-
-        Markup m = createMarkup(markupClass,mValue);
-        setSpan(m,true);
-        appliedMarkups.add(m);
-    }
-
-    public void toggleMarkup(Class<? extends Markup> markupClass, Object mValue){
+    public <T extends Markup> void manageMarkup(Class<T> markupClass, @Nullable Object mValue) {
 
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
 
-        Markup[] spans = editText.getText().getSpans(start,end,markupClass);
+        Markup actualMarkup = newMarkup(markupClass, mValue);
 
-        if(spans.length > 0){
-            Markup theSpan = spans[0];
-            if(appliedMarkups.contains(theSpan))
-                removeMarkup(theSpan,start,end);
-            else
-                apply(markupClass,mValue);
+        if (actualMarkup != null) {
+
+            Markup[] spans = editText.getText().getSpans(start, end, Markup.class);
+            for (Markup markup : spans) {
+                if (!actualMarkup.canExistWith(markup.getId()))
+                    removeMarkup(markup, start, end);
+            }
+            setSpan(actualMarkup, true);
         }
-
     }
 
-    public boolean isApplied(Class<? extends Markup> markupClass){
+    private <T extends Markup> Markup newMarkup(Class<T> markupClass, Object mValue) {
+
+        Markup markup = null;
+        try {
+            if (hasSingleArgumentConstructor(markupClass)) {
+                Constructor<T> ctor = markupClass.getConstructor(mValue.getClass());
+                markup = ctor.newInstance(mValue);
+            } else
+                markup = markupClass.newInstance();
+        } catch (Exception e) {
+            Log.e(TAG, "Could not instantiate " + markupClass, e);
+        }
+        return markup;
+    }
+
+    private boolean hasSingleArgumentConstructor(Class<?> theClass) {
+
+        Constructor<?>[] ctors = theClass.getConstructors();
+        for (Constructor<?> constructor : ctors) {
+            if (constructor.getParameterTypes().length == 1)
+                return true;
+        }
+        return false;
+    }
+
+    public boolean isApplied(Class<? extends Markup> markupClass) {
 
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
 
-        return editText.getText().getSpans(start,end,markupClass).length > 0;
+        return editText.getText().getSpans(start, end, markupClass).length > 0;
 
     }
 
-    public List<Markup> getAppliedMarkups(){
-        return appliedMarkups;
+    public List<Markup> getAppliedMarkups() {
+
+        int start = editText.getSelectionStart();
+        int end = editText.getSelectionEnd();
+
+        Markup[] markups = editText.getText().getSpans(start, end, Markup.class);
+        return Arrays.asList(markups);
     }
 
-    private void removeMarkup(Markup what, int from, int to){
+    private void removeMarkup(Markup what, int from, int to) {
+
         Editable text = editText.getText();
         int start = text.getSpanStart(what);
         int end = text.getSpanEnd(what);
 
         text.removeSpan(what);
 
-        if(start < from)
-            text.setSpan(what,start,from,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        if(end > to)
-            text.setSpan(what,to,end,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        appliedMarkups.remove(what);
+        if (start < from)
+            text.setSpan(what, start, from, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (end > to)
+            text.setSpan(what, to, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
-    private void setSpan(Markup spanObject,boolean apply){
+    private void setSpan(Markup spanObject, boolean apply) {
 
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
 
-        Editable text =  editText.getText();
-        if(apply)
-        text.setSpan(spanObject,start,end,Spanned.SPAN_EXCLUSIVE_INCLUSIVE);
+        Editable text = editText.getText();
+        if (apply)
+            text.setSpan(spanObject, start, end, Spanned.SPAN_EXCLUSIVE_INCLUSIVE);
         else
-            removeMarkup(spanObject,start,end);
-    }
-
-    private <T extends Markup> Markup createMarkup(Class<T> markupClass, Object mValue){
-
-        T markup;
-        Constructor<T> constructor;
-        try {
-            if (mValue == null) {
-                constructor = markupClass.getConstructor();
-                markup = constructor.newInstance((Object[]) null);
-            }
-            else{
-                constructor = markupClass.getConstructor(mValue.getClass());
-                markup = constructor.newInstance(mValue);
-            }
-        }catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return markup;
+            removeMarkup(spanObject, start, end);
     }
 }

@@ -29,7 +29,6 @@ public class BoldMarkup extends StyleSpan implements Markup {
     public static final int ID = 1;
 
     public BoldMarkup() {
-
         super(Typeface.BOLD);
     }
 
@@ -40,13 +39,13 @@ public class BoldMarkup extends StyleSpan implements Markup {
     }
 
     @Override
-    public int getMarkupId() {
+    public int getId() {
         return ID;
     }
 
     @Override
-    public boolean isExclusiveWith(int markupId) {
+    public boolean canExistWith(int markupId) {
 
-        return getMarkupId() != markupId;
+        return getId() != markupId;
     }
 }
