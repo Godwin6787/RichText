@@ -33,10 +33,10 @@ import java.util.Map;
 public class HtmlUtility {
 
     public static final String TAG = "@HtmlUtility";
-    private Map<Class<?>, SpanTransformer> transformers;
     private final String TAG_START = "<";
     private final String TAG_START_CLOSED = "</";
     private final String TAG_END = ">";
+    private Map<Class<?>, SpanTransformer> transformers;
 
     public HtmlUtility() {
         transformers = new HashMap<>();
@@ -74,19 +74,15 @@ public class HtmlUtility {
     private void convertMarkup(Markup span, SpannableStringBuilder sb) {
 
         int start = sb.getSpanStart(span);
-        int end = sb.getSpanEnd(span);
         String tag = span.getTag();
-
         sb.insert(start, TAG_START + tag + TAG_END);
-        sb.insert(end, TAG_START_CLOSED + tag + TAG_END);
+        sb.insert(sb.getSpanEnd(span), TAG_START_CLOSED + tag + TAG_END);
     }
 
     private void convertAttributedMarkup(AttributedMarkup span, SpannableStringBuilder sb) {
 
         int start = sb.getSpanStart(span);
-        int end = sb.getSpanEnd(span);
         Map<String, String> attrMap = span.getAttributes();
-
 
         String tag = span.getTag();
         StringBuilder builder = new StringBuilder();
@@ -98,6 +94,6 @@ public class HtmlUtility {
         }
         builder.append(TAG_END);
         sb.insert(start, builder.toString());
-        sb.insert(end, TAG_START_CLOSED + tag + TAG_END);
+        sb.insert(sb.getSpanEnd(span), TAG_START_CLOSED + tag + TAG_END);
     }
 }
