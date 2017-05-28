@@ -90,7 +90,9 @@ public class HtmlUtility {
         for (Map.Entry<String, String> attribute : attrMap.entrySet()) {
 
             builder.append(" ").append(attribute.getKey()).append("=")
-                    .append(attribute.getValue());
+                    .append(" \"")
+                    .append(attribute.getValue())
+                    .append("\" ");
         }
         builder.append(TAG_END);
         sb.insert(start, builder.toString());

@@ -28,7 +28,7 @@ import java.util.Map;
 
 public class LinkMarkup extends URLSpan implements AttributedMarkup {
 
-    public static final String ATTR_URL = "url";
+    public static final String ATTR_URL = "href";
     public static final int ID = 4;
     private Map<String, String> attributes;
 

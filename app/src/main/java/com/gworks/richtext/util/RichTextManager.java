@@ -22,6 +22,7 @@ import android.text.Spanned;
 import android.util.Log;
 import android.widget.EditText;
 
+import com.gworks.richtext.markups.AttributedMarkup;
 import com.gworks.richtext.markups.Markup;
 
 import java.lang.reflect.Constructor;
@@ -42,16 +43,53 @@ public class RichTextManager {
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
 
-        Markup actualMarkup = newMarkup(markupClass, mValue);
+        Markup actualMarkup = null;
+        if (start != end)
+            actualMarkup = newMarkup(markupClass, mValue);
 
         if (actualMarkup != null) {
 
             Markup[] spans = editText.getText().getSpans(start, end, Markup.class);
-            for (Markup markup : spans) {
-                if (!actualMarkup.canExistWith(markup.getId()))
-                    removeMarkup(markup, start, end);
+            if (spans.length == 0)
+                setSpan(actualMarkup, true);
+
+            else {
+                if (actualMarkup instanceof AttributedMarkup)
+                    manageAttributedMarkup((AttributedMarkup) actualMarkup, spans, start, end);
+                else {
+                    Markup existingMarkup;
+                    for (int i = 0; i < spans.length; i++) {
+                        existingMarkup = spans[i];
+                        if (existingMarkup.getId() == actualMarkup.getId()) {
+                            removeMarkup(existingMarkup, start, end);
+                            break;
+                        } else {
+                            if (!actualMarkup.canExistWith(existingMarkup.getId()))
+                                removeMarkup(existingMarkup, start, end);
+                            if (i == spans.length - 1)
+                                setSpan(actualMarkup, true);
+                        }
+                    }
+                }
             }
-            setSpan(actualMarkup, true);
+        }
+    }
+
+    private void manageAttributedMarkup(AttributedMarkup actualMarkup, Markup[] spans, int start, int end) {
+
+        Markup existingMarkup;
+        for (int i = 0; i < spans.length; i++) {
+            existingMarkup = spans[i];
+            if (existingMarkup.getId() == actualMarkup.getId()) {
+                removeMarkup(existingMarkup, start, end);
+                setSpan(actualMarkup, true);
+                break;
+            } else {
+                if (!actualMarkup.canExistWith(existingMarkup.getId()))
+                    removeMarkup(existingMarkup, start, end);
+                if (i == spans.length - 1)
+                    setSpan(actualMarkup, true);
+            }
         }
     }
 
