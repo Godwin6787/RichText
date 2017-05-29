@@ -14,17 +14,19 @@
  *  limitations under the License.
  */
 
-package com.gworks.richtext.markups;
+package com.gworks.richtext.tags;
 
 import android.support.annotation.NonNull;
-import java.util.Map;
 
 /**
- * Created by Godwin Lewis on 5/11/2017.
+ * Created by Godwin Lewis on 5/9/2017.
  */
 
-public interface AttributedMarkup extends Markup {
+public interface HtmlTag {
 
-   @NonNull Map<String,String> getAttributes();
-   String valueOf(String attribute);
+    @NonNull String getTag();
+
+    int getId();
+
+    boolean canExistWith(int markupId);
 }

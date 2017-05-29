@@ -14,26 +14,34 @@
  *  limitations under the License.
  */
 
-package com.gworks.richtext.markups;
+package com.gworks.richtext.tags;
 
-import android.graphics.Typeface;
 import android.support.annotation.NonNull;
-import android.text.style.StyleSpan;
+import android.text.style.URLSpan;
 
+import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * Created by Godwin Lewis on 5/11/2017.
+ */
 
-public class ItalicMarkup extends StyleSpan implements Markup {
+public class LinkTag extends URLSpan implements AttributedTag {
 
-    public static final int ID = 2;
+    public static final String ATTR_URL = "href";
+    public static final int ID = 4;
+    private Map<String, String> attributes;
 
-    public ItalicMarkup(){
-        super(Typeface.ITALIC);
+    public LinkTag(String url) {
+        super(url);
+        attributes = new HashMap<>();
+        attributes.put(ATTR_URL,url);
     }
 
     @NonNull
     @Override
     public String getTag() {
-        return "i";
+        return "a";
     }
 
     @Override
@@ -43,7 +51,17 @@ public class ItalicMarkup extends StyleSpan implements Markup {
 
     @Override
     public boolean canExistWith(int markupId) {
-        return getId() != markupId;
+        return markupId != getId();
     }
 
+    @NonNull
+    @Override
+    public Map<String, String> getAttributes() {
+        return attributes;
+    }
+
+    @Override
+    public String valueOf(String attribute) {
+        return attributes.get(attribute);
+    }
 }

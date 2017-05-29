@@ -20,8 +20,8 @@ import android.support.annotation.NonNull;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 
-import com.gworks.richtext.markups.AttributedMarkup;
-import com.gworks.richtext.markups.Markup;
+import com.gworks.richtext.tags.AttributedTag;
+import com.gworks.richtext.tags.HtmlTag;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -62,16 +62,16 @@ public class HtmlUtility {
                 transformer.transformSpan(span, sb);
 
             else {
-                if (span instanceof AttributedMarkup)
-                    convertAttributedMarkup((AttributedMarkup) span, sb);
-                else if (span instanceof Markup)
-                    convertMarkup((Markup) span, sb);
+                if (span instanceof AttributedTag)
+                    convertAttributedMarkup((AttributedTag) span, sb);
+                else if (span instanceof HtmlTag)
+                    convertMarkup((HtmlTag) span, sb);
             }
         }
         return sb.toString();
     }
 
-    private void convertMarkup(Markup span, SpannableStringBuilder sb) {
+    private void convertMarkup(HtmlTag span, SpannableStringBuilder sb) {
 
         int start = sb.getSpanStart(span);
         String tag = span.getTag();
@@ -79,7 +79,7 @@ public class HtmlUtility {
         sb.insert(sb.getSpanEnd(span), TAG_START_CLOSED + tag + TAG_END);
     }
 
-    private void convertAttributedMarkup(AttributedMarkup span, SpannableStringBuilder sb) {
+    private void convertAttributedMarkup(AttributedTag span, SpannableStringBuilder sb) {
 
         int start = sb.getSpanStart(span);
         Map<String, String> attrMap = span.getAttributes();

@@ -14,38 +14,18 @@
  *  limitations under the License.
  */
 
-package com.gworks.richtext.markups;
+package com.gworks.richtext.tags;
 
-import android.graphics.Typeface;
 import android.support.annotation.NonNull;
-import android.text.style.StyleSpan;
+
+import java.util.Map;
 
 /**
- * Created by Godwin Lewis on 5/9/2017.
+ * Created by Godwin Lewis on 5/11/2017.
  */
 
-public class BoldMarkup extends StyleSpan implements Markup {
+public interface AttributedTag extends HtmlTag {
 
-    public static final int ID = 1;
-
-    public BoldMarkup() {
-        super(Typeface.BOLD);
-    }
-
-    @NonNull
-    @Override
-    public String getTag() {
-        return "b";
-    }
-
-    @Override
-    public int getId() {
-        return ID;
-    }
-
-    @Override
-    public boolean canExistWith(int markupId) {
-
-        return getId() != markupId;
-    }
+   @NonNull Map<String,String> getAttributes();
+   String valueOf(String attribute);
 }

@@ -22,8 +22,8 @@ import android.text.Spanned;
 import android.util.Log;
 import android.widget.EditText;
 
-import com.gworks.richtext.markups.AttributedMarkup;
-import com.gworks.richtext.markups.Markup;
+import com.gworks.richtext.tags.AttributedTag;
+import com.gworks.richtext.tags.HtmlTag;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -39,36 +39,36 @@ public class RichTextManager {
         this.editText = editText;
     }
 
-    public <T extends Markup> void manageMarkup(Class<T> markupClass, @Nullable MarkupValue mValue) {
+    public <T extends HtmlTag> void manageMarkup(Class<T> markupClass, @Nullable MarkupValue mValue) {
 
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
 
-        Markup actualMarkup = null;
+        HtmlTag actualHtmlTag = null;
         if (start != end)
-            actualMarkup = newMarkup(markupClass, mValue);
+            actualHtmlTag = newMarkup(markupClass, mValue);
 
-        if (actualMarkup != null) {
+        if (actualHtmlTag != null) {
 
-            Markup[] spans = editText.getText().getSpans(start, end, Markup.class);
+            HtmlTag[] spans = editText.getText().getSpans(start, end, HtmlTag.class);
             if (spans.length == 0)
-                setSpan(actualMarkup, true);
+                setSpan(actualHtmlTag, true);
 
             else {
-                if (actualMarkup instanceof AttributedMarkup)
-                    manageAttributedMarkup((AttributedMarkup) actualMarkup, spans, start, end);
+                if (actualHtmlTag instanceof AttributedTag)
+                    manageAttributedMarkup((AttributedTag) actualHtmlTag, spans, start, end);
                 else {
-                    Markup existingMarkup;
+                    HtmlTag existingHtmlTag;
                     for (int i = 0; i < spans.length; i++) {
-                        existingMarkup = spans[i];
-                        if (existingMarkup.getId() == actualMarkup.getId()) {
-                            removeMarkup(existingMarkup, start, end);
+                        existingHtmlTag = spans[i];
+                        if (existingHtmlTag.getId() == actualHtmlTag.getId()) {
+                            removeMarkup(existingHtmlTag, start, end);
                             break;
                         } else {
-                            if (!actualMarkup.canExistWith(existingMarkup.getId()))
-                                removeMarkup(existingMarkup, start, end);
+                            if (!actualHtmlTag.canExistWith(existingHtmlTag.getId()))
+                                removeMarkup(existingHtmlTag, start, end);
                             if (i == spans.length - 1)
-                                setSpan(actualMarkup, true);
+                                setSpan(actualHtmlTag, true);
                         }
                     }
                 }
@@ -76,21 +76,21 @@ public class RichTextManager {
         }
     }
 
-    private void manageAttributedMarkup(AttributedMarkup actualMarkup, Markup[] spans, int start, int end) {
+    private void manageAttributedMarkup(AttributedTag actualMarkup, HtmlTag[] spans, int start, int end) {
 
-        Markup existingMarkup;
+        HtmlTag existingHtmlTag;
         Map<String, String> attribs;
         for (int i = 0; i < spans.length; i++) {
-            existingMarkup = spans[i];
-            if (existingMarkup.getId() == actualMarkup.getId()) {
+            existingHtmlTag = spans[i];
+            if (existingHtmlTag.getId() == actualMarkup.getId()) {
                 attribs = actualMarkup.getAttributes();
                 if (!hasNullAttributes(attribs))
                     setSpan(actualMarkup, true);
-                removeMarkup(existingMarkup, start, end);
+                removeMarkup(existingHtmlTag, start, end);
                 break;
             } else {
-                if (!actualMarkup.canExistWith(existingMarkup.getId()))
-                    removeMarkup(existingMarkup, start, end);
+                if (!actualMarkup.canExistWith(existingHtmlTag.getId()))
+                    removeMarkup(existingHtmlTag, start, end);
                 if (i == spans.length - 1)
                     setSpan(actualMarkup, true);
             }
@@ -105,22 +105,22 @@ public class RichTextManager {
         return false;
     }
 
-    private <T extends Markup> Markup newMarkup(Class<T> markupClass, MarkupValue mValue) {
+    private <T extends HtmlTag> HtmlTag newMarkup(Class<T> markupClass, MarkupValue mValue) {
 
-        Markup markup = null;
+        HtmlTag htmlTag = null;
         try {
-            if (AttributedMarkup.class.isAssignableFrom(markupClass)) {
+            if (AttributedTag.class.isAssignableFrom(markupClass)) {
                 if (mValue != null && mValue.getClass() != null) {
                     Constructor<T> ctor = markupClass.getConstructor(mValue.getValueClass());
-                    markup = ctor.newInstance(mValue.getValue());
+                    htmlTag = ctor.newInstance(mValue.getValue());
                 } else
                     Log.e(TAG, "AttributedMarkups cannot have a null ValueClass !");
             } else
-                markup = markupClass.newInstance();
+                htmlTag = markupClass.newInstance();
         } catch (Exception e) {
             Log.e(TAG, "Could not instantiate " + markupClass, e);
         }
-        return markup;
+        return htmlTag;
     }
 
     private boolean hasSingleArgumentConstructor(Class<?> theClass) {
@@ -133,7 +133,7 @@ public class RichTextManager {
         return false;
     }
 
-    public boolean isApplied(Class<? extends Markup> markupClass) {
+    public boolean isApplied(Class<? extends HtmlTag> markupClass) {
 
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
@@ -142,16 +142,16 @@ public class RichTextManager {
 
     }
 
-    public List<Markup> getAppliedMarkups() {
+    public List<HtmlTag> getAppliedMarkups() {
 
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
 
-        Markup[] markups = editText.getText().getSpans(start, end, Markup.class);
-        return Arrays.asList(markups);
+        HtmlTag[] htmlTags = editText.getText().getSpans(start, end, HtmlTag.class);
+        return Arrays.asList(htmlTags);
     }
 
-    private void removeMarkup(Markup what, int from, int to) {
+    private void removeMarkup(HtmlTag what, int from, int to) {
 
         Editable text = editText.getText();
         int start = text.getSpanStart(what);
@@ -165,7 +165,7 @@ public class RichTextManager {
             text.setSpan(what, to, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
-    private void setSpan(Markup spanObject, boolean exclusiveInclusive) {
+    private void setSpan(HtmlTag spanObject, boolean exclusiveInclusive) {
 
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
