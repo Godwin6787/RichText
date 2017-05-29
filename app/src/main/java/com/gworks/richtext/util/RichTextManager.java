@@ -39,7 +39,7 @@ public class RichTextManager {
         this.editText = editText;
     }
 
-    public <T extends HtmlTag> void manageMarkup(Class<T> markupClass, @Nullable MarkupValue mValue) {
+    public <T extends HtmlTag> void manageMarkup(Class<T> markupClass, @Nullable AttributeValue mValue) {
 
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
@@ -105,7 +105,7 @@ public class RichTextManager {
         return false;
     }
 
-    private <T extends HtmlTag> HtmlTag newMarkup(Class<T> markupClass, MarkupValue mValue) {
+    private <T extends HtmlTag> HtmlTag newMarkup(Class<T> markupClass, AttributeValue mValue) {
 
         HtmlTag htmlTag = null;
         try {

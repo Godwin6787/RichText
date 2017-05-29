@@ -20,12 +20,12 @@ package com.gworks.richtext.util;
  * Created by Godwin Lewis on 5/29/2017.
  */
 
-public class MarkupValue<T> {
+public class AttributeValue<T> {
 
     private Class<T> valueClass;
     private Object value;
 
-    public MarkupValue(Class<T> valueClass, T value) {
+    public AttributeValue(Class<T> valueClass, T value) {
         this.valueClass = valueClass;
         this.value = value;
     }
