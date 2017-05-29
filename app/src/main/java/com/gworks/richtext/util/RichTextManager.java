@@ -123,16 +123,6 @@ public class RichTextManager {
         return htmlTag;
     }
 
-    private boolean hasSingleArgumentConstructor(Class<?> theClass) {
-
-        Constructor<?>[] ctors = theClass.getConstructors();
-        for (Constructor<?> constructor : ctors) {
-            if (constructor.getParameterTypes().length == 1)
-                return true;
-        }
-        return false;
-    }
-
     public boolean isApplied(Class<? extends HtmlTag> markupClass) {
 
         int start = editText.getSelectionStart();
