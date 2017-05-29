@@ -28,6 +28,7 @@ import com.gworks.richtext.markups.Markup;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class RichTextManager {
 
@@ -38,7 +39,7 @@ public class RichTextManager {
         this.editText = editText;
     }
 
-    public <T extends Markup> void manageMarkup(Class<T> markupClass, @Nullable Object mValue) {
+    public <T extends Markup> void manageMarkup(Class<T> markupClass, @Nullable MarkupValue mValue) {
 
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
@@ -78,11 +79,14 @@ public class RichTextManager {
     private void manageAttributedMarkup(AttributedMarkup actualMarkup, Markup[] spans, int start, int end) {
 
         Markup existingMarkup;
+        Map<String, String> attribs;
         for (int i = 0; i < spans.length; i++) {
             existingMarkup = spans[i];
             if (existingMarkup.getId() == actualMarkup.getId()) {
+                attribs = actualMarkup.getAttributes();
+                if (!hasNullAttributes(attribs))
+                    setSpan(actualMarkup, true);
                 removeMarkup(existingMarkup, start, end);
-                setSpan(actualMarkup, true);
                 break;
             } else {
                 if (!actualMarkup.canExistWith(existingMarkup.getId()))
@@ -93,13 +97,24 @@ public class RichTextManager {
         }
     }
 
-    private <T extends Markup> Markup newMarkup(Class<T> markupClass, Object mValue) {
+    private boolean hasNullAttributes(Map<String, String> map) {
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            if (entry.getValue() == null)
+                return true;
+        }
+        return false;
+    }
+
+    private <T extends Markup> Markup newMarkup(Class<T> markupClass, MarkupValue mValue) {
 
         Markup markup = null;
         try {
-            if (hasSingleArgumentConstructor(markupClass)) {
-                Constructor<T> ctor = markupClass.getConstructor(mValue.getClass());
-                markup = ctor.newInstance(mValue);
+            if (AttributedMarkup.class.isAssignableFrom(markupClass)) {
+                if (mValue != null && mValue.getClass() != null) {
+                    Constructor<T> ctor = markupClass.getConstructor(mValue.getValueClass());
+                    markup = ctor.newInstance(mValue.getValue());
+                } else
+                    Log.e(TAG, "AttributedMarkups cannot have a null ValueClass !");
             } else
                 markup = markupClass.newInstance();
         } catch (Exception e) {
@@ -150,15 +165,12 @@ public class RichTextManager {
             text.setSpan(what, to, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
-    private void setSpan(Markup spanObject, boolean apply) {
+    private void setSpan(Markup spanObject, boolean exclusiveInclusive) {
 
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
 
         Editable text = editText.getText();
-        if (apply)
             text.setSpan(spanObject, start, end, Spanned.SPAN_EXCLUSIVE_INCLUSIVE);
-        else
-            removeMarkup(spanObject, start, end);
     }
 }
