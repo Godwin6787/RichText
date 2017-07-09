@@ -18,31 +18,53 @@ package com.gworks.richtext.tags;
 
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
+import android.text.Spannable;
 import android.text.style.StyleSpan;
 
+import com.gworks.richtext.Constants;
 
-public class ItalicTag extends StyleSpan implements HtmlTag {
+
+public class Italic extends StyleSpan implements Tag {
 
     public static final int ID = 2;
 
-    public ItalicTag() {
+    public Italic() {
         super(Typeface.ITALIC);
     }
 
     @NonNull
     @Override
     public String getTag() {
-        return "i";
+        return Constants.TAG_ITALIC;
     }
 
     @Override
-    public int getId() {
+    public int getType() {
         return ID;
     }
 
     @Override
     public boolean canExistWith(int markupId) {
-        return getId() != markupId;
+        return getType() != markupId;
     }
 
+    @Override
+    public void apply(Spannable text, int from, int to, int flags) {
+        text.setSpan(this, from, to, flags);
+    }
+
+    @Override
+    public void remove(Spannable text) {
+        text.removeSpan(this);
+    }
+
+    @Override
+    public Object getSpan() {
+        return this;
+    }
+
+    @Override
+    public boolean isSplittable() {
+        return true;
+    }
 }

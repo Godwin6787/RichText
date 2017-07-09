@@ -17,16 +17,25 @@
 package com.gworks.richtext.tags;
 
 import android.support.annotation.NonNull;
+import android.text.Spannable;
 
 /**
  * Created by Godwin Lewis on 5/9/2017.
  */
 
-public interface HtmlTag {
+public interface Tag {
 
     @NonNull String getTag();
 
-    int getId();
+    int getType();
 
-    boolean canExistWith(int markupId);
+    boolean canExistWith(int anotherType);
+
+    void apply(Spannable text, int from ,int to, int flags);
+
+    void remove(Spannable text);
+
+    Object getSpan();
+
+    boolean isSplittable();
 }

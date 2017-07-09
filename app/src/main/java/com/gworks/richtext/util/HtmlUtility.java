@@ -21,7 +21,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 
 import com.gworks.richtext.tags.AttributedTag;
-import com.gworks.richtext.tags.HtmlTag;
+import com.gworks.richtext.tags.Tag;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -64,14 +64,14 @@ public class HtmlUtility {
             else {
                 if (span instanceof AttributedTag)
                     convertAttributedMarkup((AttributedTag) span, sb);
-                else if (span instanceof HtmlTag)
-                    convertMarkup((HtmlTag) span, sb);
+                else if (span instanceof Tag)
+                    convertMarkup((Tag) span, sb);
             }
         }
         return sb.toString();
     }
 
-    private void convertMarkup(HtmlTag span, SpannableStringBuilder sb) {
+    private void convertMarkup(Tag span, SpannableStringBuilder sb) {
 
         int start = sb.getSpanStart(span);
         String tag = span.getTag();

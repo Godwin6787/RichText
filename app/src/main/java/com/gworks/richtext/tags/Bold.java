@@ -16,52 +16,58 @@
 
 package com.gworks.richtext.tags;
 
+import android.graphics.Typeface;
 import android.support.annotation.NonNull;
-import android.text.style.URLSpan;
+import android.text.Spannable;
+import android.text.style.StyleSpan;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.gworks.richtext.Constants;
 
 /**
- * Created by Godwin Lewis on 5/11/2017.
+ * Created by Godwin Lewis on 5/9/2017.
  */
 
-public class LinkTag extends URLSpan implements AttributedTag {
+public class Bold extends StyleSpan implements Tag {
 
-    public static final String ATTR_URL = "href";
-    public static final int ID = 4;
-    private Map<String, String> attributes;
+    public static final int ID = 1;
 
-    public LinkTag(String url) {
-        super(url);
-        attributes = new HashMap<>();
-        attributes.put(ATTR_URL,url);
+    public Bold() {
+        super(Typeface.BOLD);
     }
 
     @NonNull
     @Override
     public String getTag() {
-        return "a";
+        return Constants.TAG_BOLD;
     }
 
     @Override
-    public int getId() {
+    public int getType() {
         return ID;
     }
 
     @Override
     public boolean canExistWith(int markupId) {
-        return markupId != getId();
-    }
-
-    @NonNull
-    @Override
-    public Map<String, String> getAttributes() {
-        return attributes;
+        return getType() != markupId;
     }
 
     @Override
-    public String valueOf(String attribute) {
-        return attributes.get(attribute);
+    public void apply(Spannable text, int from, int to, int flags) {
+        text.setSpan(this, from, to, flags);
+    }
+
+    @Override
+    public void remove(Spannable text) {
+        text.removeSpan(this);
+    }
+
+    @Override
+    public Object getSpan() {
+        return this;
+    }
+
+    @Override
+    public boolean isSplittable() {
+        return true;
     }
 }

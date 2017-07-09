@@ -24,8 +24,12 @@ import java.util.Map;
  * Created by Godwin Lewis on 5/11/2017.
  */
 
-public interface AttributedTag extends HtmlTag {
+public interface AttributedTag<V> extends Tag {
 
-   @NonNull Map<String,String> getAttributes();
+   @NonNull Map<String, String> getAttributes();
+
    String valueOf(String attribute);
+
+   V getValue();
+
 }
