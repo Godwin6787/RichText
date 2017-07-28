@@ -24,7 +24,7 @@ import java.util.Map;
  * Created by Godwin Lewis on 5/11/2017.
  */
 
-public interface AttributedTag<V> extends Tag {
+public interface AttributedTag<V> extends Markup {
 
    @NonNull Map<String, String> getAttributes();
 

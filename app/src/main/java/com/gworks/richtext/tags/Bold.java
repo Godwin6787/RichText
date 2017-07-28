@@ -17,17 +17,17 @@
 package com.gworks.richtext.tags;
 
 import android.graphics.Typeface;
-import android.support.annotation.NonNull;
 import android.text.Spannable;
+import android.text.Spanned;
 import android.text.style.StyleSpan;
 
-import com.gworks.richtext.Constants;
+import com.gworks.richtext.util.MarkupConverter;
 
 /**
  * Created by Godwin Lewis on 5/9/2017.
  */
 
-public class Bold extends StyleSpan implements Tag {
+public class Bold extends StyleSpan implements Markup {
 
     public static final int ID = 1;
 
@@ -35,10 +35,9 @@ public class Bold extends StyleSpan implements Tag {
         super(Typeface.BOLD);
     }
 
-    @NonNull
     @Override
-    public String getTag() {
-        return Constants.TAG_BOLD;
+    public void convert(StringBuilder sb, MarkupConverter converter, boolean begin) {
+        converter.convertMarkup(sb, this, begin);
     }
 
     @Override
@@ -62,12 +61,17 @@ public class Bold extends StyleSpan implements Tag {
     }
 
     @Override
-    public Object getSpan() {
-        return this;
+    public boolean isSplittable() {
+        return true;
     }
 
     @Override
-    public boolean isSplittable() {
-        return true;
+    public int getSpanStart(Spanned text) {
+        return text.getSpanStart(this);
+    }
+
+    @Override
+    public int getSpanEnd(Spanned text) {
+        return text.getSpanEnd(this);
     }
 }

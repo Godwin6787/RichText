@@ -18,9 +18,11 @@ package com.gworks.richtext.tags;
 
 import android.support.annotation.NonNull;
 import android.text.Spannable;
+import android.text.Spanned;
 import android.text.style.URLSpan;
 
 import com.gworks.richtext.Constants;
+import com.gworks.richtext.util.MarkupConverter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,10 +42,9 @@ public class Link extends URLSpan implements AttributedTag<String> {
         attributes.put(Constants.ATTR_URL, url);
     }
 
-    @NonNull
     @Override
-    public String getTag() {
-        return Constants.TAG_LINK;
+    public void convert(StringBuilder sb, MarkupConverter converter, boolean begin) {
+        converter.convertMarkup(sb, this, begin);
     }
 
     @Override
@@ -83,12 +84,17 @@ public class Link extends URLSpan implements AttributedTag<String> {
     }
 
     @Override
-    public Object getSpan() {
-        return this;
+    public boolean isSplittable() {
+        return false;
     }
 
     @Override
-    public boolean isSplittable() {
-        return false;
+    public int getSpanStart(Spanned text) {
+        return text.getSpanStart(this);
+    }
+
+    @Override
+    public int getSpanEnd(Spanned text) {
+        return text.getSpanEnd(this);
     }
 }

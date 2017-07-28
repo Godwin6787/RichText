@@ -17,14 +17,14 @@
 package com.gworks.richtext.tags;
 
 import android.graphics.Typeface;
-import android.support.annotation.NonNull;
 import android.text.Spannable;
+import android.text.Spanned;
 import android.text.style.StyleSpan;
 
-import com.gworks.richtext.Constants;
+import com.gworks.richtext.util.MarkupConverter;
 
 
-public class Italic extends StyleSpan implements Tag {
+public class Italic extends StyleSpan implements Markup {
 
     public static final int ID = 2;
 
@@ -32,10 +32,9 @@ public class Italic extends StyleSpan implements Tag {
         super(Typeface.ITALIC);
     }
 
-    @NonNull
     @Override
-    public String getTag() {
-        return Constants.TAG_ITALIC;
+    public void convert(StringBuilder sb, MarkupConverter converter, boolean begin) {
+        converter.convertMarkup(sb, this, begin);
     }
 
     @Override
@@ -59,12 +58,17 @@ public class Italic extends StyleSpan implements Tag {
     }
 
     @Override
-    public Object getSpan() {
-        return this;
+    public boolean isSplittable() {
+        return true;
     }
 
     @Override
-    public boolean isSplittable() {
-        return true;
+    public int getSpanStart(Spanned text) {
+        return text.getSpanStart(this);
+    }
+
+    @Override
+    public int getSpanEnd(Spanned text) {
+        return text.getSpanEnd(this);
     }
 }

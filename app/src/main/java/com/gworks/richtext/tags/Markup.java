@@ -16,16 +16,18 @@
 
 package com.gworks.richtext.tags;
 
-import android.support.annotation.NonNull;
 import android.text.Spannable;
+import android.text.Spanned;
+
+import com.gworks.richtext.util.MarkupConverter;
 
 /**
  * Created by Godwin Lewis on 5/9/2017.
  */
 
-public interface Tag {
+public interface Markup {
 
-    @NonNull String getTag();
+    void convert(StringBuilder sb, MarkupConverter converter, boolean begin);
 
     int getType();
 
@@ -35,7 +37,9 @@ public interface Tag {
 
     void remove(Spannable text);
 
-    Object getSpan();
+    int getSpanStart(Spanned text);
+
+    int getSpanEnd(Spanned text);
 
     boolean isSplittable();
 }

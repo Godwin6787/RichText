@@ -24,43 +24,57 @@ import android.text.TextWatcher;
 import android.util.SparseArray;
 import android.widget.EditText;
 
-import com.gworks.richtext.Constants;
 import com.gworks.richtext.tags.AttributedTag;
-import com.gworks.richtext.tags.Tag;
+import com.gworks.richtext.tags.Markup;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
+import java.util.Set;
 
 public class RichTextManager {
 
     private static final String TAG = "@RichTextManager";
     private EditText editText;
-    private SparseArray<Tag> prototypes;
-    private Map<Object, Tag> appliedSpans;
+    private SparseArray<SpanTransition> spanTransitions;
+    private SparseArray<Markup> prototypes;
 
     public RichTextManager(EditText editText) {
         this.editText = editText;
+        spanTransitions = new SparseArray<>();
         prototypes = new SparseArray<>();
-        appliedSpans = new HashMap<>();
         editText.addTextChangedListener(textWatcher);
     }
 
-    public void registerMarkup(int markupType, Tag markup) {
+    public void registerMarkup(int markupType, Markup markup) {
         prototypes.put(markupType, markup);
     }
 
     public <T> void apply(int markupType, T value) {
-        apply(createMarkup(markupType, value), editText.getSelectionStart(), editText.getSelectionEnd());
+        applyInternal(createMarkup(markupType, value), editText.getSelectionStart(), editText.getSelectionEnd());
     }
 
-    public void apply(Tag markup, int from, int to) {
+    public void apply(Markup markup, int from, int to) {
+        applyInternal(markup, from, to);
+    }
+
+    private void applyInternal(Markup markup, int from, int to) {
         markup.apply(editText.getText(), from, to,
                 from == to ? Spannable.SPAN_MARK_MARK : Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        appliedSpans.put(markup.getSpan(), markup);
+
+        SpanTransition transitionFrom = spanTransitions.get(from);
+        if (transitionFrom == null)
+            spanTransitions.put(from, transitionFrom = new SpanTransition());
+        transitionFrom.startingSpans.add(markup);
+
+        SpanTransition transitionTo = spanTransitions.get(to);
+        if (transitionTo == null)
+            spanTransitions.put(to, transitionTo = new SpanTransition());
+        transitionTo.endingSpans.add(markup);
+
     }
 
     public void remove(int markupType) {
@@ -68,7 +82,9 @@ public class RichTextManager {
     }
 
     public void remove(int markupType, int from, int to) {
-        remove(prototypes.get(markupType).getClass(), from, to);
+        for (Markup appliedMarkup : getAppliedMarkups(from, to))
+            if (appliedMarkup.getType() == markupType)
+                remove(appliedMarkup, from, to);
     }
 
     public void removeAll() {
@@ -76,33 +92,30 @@ public class RichTextManager {
     }
 
     public void removeAll(int from, int to) {
-        remove(Object.class, from, to);
+        for (Markup appliedMarkup : getAppliedMarkups(from, to))
+            remove(appliedMarkup, from, to);
     }
 
-    private void remove(Class<?> clazz, int from, int to) {
-        Object[] markups = editText.getText().getSpans(from, to, clazz);
-        for (Object span : markups)
-            remove(appliedSpans.get(span), from, to);
-    }
-
-    private void remove(Tag markup, int from, int to) {
+    private void remove(Markup markup, int from, int to) {
         if (markup != null) {
             Spannable text = editText.getText();
             int start = text.getSpanStart(markup);
             int end = text.getSpanEnd(markup);
-            remove(markup);
+            removeInternal(markup, start, end);
+
             if (markup.isSplittable()) {
                 if (start < from)
-                    apply(markup, start, from);
+                    applyInternal(markup, start, from);
                 if (end > to)
-                    apply(createMarkup(markup.getType(), null), to, end);
+                    applyInternal(createMarkup(markup.getType(), null), to, end);
             }
         }
     }
 
-    private void remove(Tag markup) {
+    private void removeInternal(Markup markup, int from, int to) {
         markup.remove(editText.getText());
-        appliedSpans.remove(markup.getSpan());
+        spanTransitions.get(from).startingSpans.remove(markup);
+        spanTransitions.get(to).endingSpans.remove(markup);
     }
 
     public <T> void update(int markupType, T value) {
@@ -118,44 +131,44 @@ public class RichTextManager {
         return isApplied(prototypes.get(markupType).getClass(), from, to);
     }
 
-    private boolean isApplied(Class<? extends Tag> markupClass, int from, int to) {
+    private boolean isApplied(Class<? extends Markup> markupClass, int from, int to) {
         return editText.getText().getSpans(from, to, markupClass).length > 0;
     }
 
-    public List<Tag> getAppliedMarkups() {
+    public List<Markup> getAppliedMarkups() {
         return getAppliedMarkups(editText.getSelectionStart(), editText.getSelectionEnd());
     }
 
-    public List<Tag> getAppliedMarkups(int from, int to) {
-        ArrayList<Tag> markups = new ArrayList<>();
-        Object[] spans = editText.getText().getSpans(from, to, Object.class);
-        for (Object span : spans) {
-            if (appliedSpans.containsKey(span))
-                markups.add(appliedSpans.get(span));
+    public List<Markup> getAppliedMarkups(int from, int to) {
+        ArrayList<Markup> markups = new ArrayList<>();
+        Set<Markup> startedTags = new HashSet<>();
+        for (int i = from; i < to; i++) {
+            List<Markup> startingTags = getSpansStartingAt(i);
+            startedTags.addAll(startingTags);
+            List<Markup> endingTags = getSpansEndingAt(i);
+            for (Markup endingTag : endingTags)
+                if (startedTags.contains(endingTag)) {
+                    markups.add(endingTag);
+                    startedTags.remove(endingTag);
+                }
         }
         return markups;
     }
 
-    public List<Object> getSpansStartingAt(int index) {
-        List<Object> openSpans = new ArrayList<>();
-        Spanned text = editText.getText();
-        Object[] spans = text.getSpans(index, text.length(), Object.class);
-        for (Object span : spans) {
-            if (appliedSpans.containsKey(span))
-                openSpans.add(span);
-        }
-        return openSpans;
+    public List<Markup> getSpansStartingAt(int index) {
+        return Collections.unmodifiableList(spansStartingAt(index));
     }
 
-    public List<Object> getSpansEndingAt(int index) {
-        List<Object> closedSpans = new ArrayList<>();
-        Spanned text = editText.getText();
-        Object[] spans = text.getSpans(0, index, Object.class);
-        for (Object span : spans) {
-            if (appliedSpans.containsKey(span))
-                closedSpans.add(span);
-        }
-        return closedSpans;
+    public List<Markup> getSpansEndingAt(int index) {
+        return Collections.unmodifiableList(spansEndingAt(index));
+    }
+
+    private List<Markup> spansStartingAt(int index) {
+        return spanTransitions.get(index).startingSpans;
+    }
+
+    private List<Markup> spansEndingAt(int index) {
+        return spanTransitions.get(index).endingSpans;
     }
 
     public String getPlainText() {
@@ -163,44 +176,47 @@ public class RichTextManager {
     }
 
     public String getHtml() {
+        return getHtml(null);
+    }
+
+    public String getHtml(MarkupConverter.UnknownMarkupHandler unknownMarkupHandler) {
 
         Spanned text = editText.getText();
         StringBuilder html = new StringBuilder(text.length());
+        HtmlConverter htmlConverter = new HtmlConverter(unknownMarkupHandler);
         int processed = 0;
         int end = text.length();
-        List<Object> openSpans = new LinkedList<>();
+        List<Markup> openSpans = new LinkedList<>();
 
         while (processed < end) {
             // Get the next span transition.
             int transitionIndex = text.nextSpanTransition(processed, end, null);
+            if (transitionIndex > processed)
+                html.append(text.subSequence(processed, transitionIndex));
+
+            List<Markup> startingSpans = spansStartingAt(transitionIndex);
+            for (Markup startingSpan : startingSpans) {
+                startingSpan.convert(html, htmlConverter, true);
+                // Consider a starting span as an opening span.
+                openSpans.add(startingSpan);
+            }
 
             // Iterate all ending spans at the transition index.
-            List<Object> endingSpans = getSpansEndingAt(transitionIndex);
-            for (Object endingSpan : endingSpans) {
-                ListIterator<Object> iterator = openSpans.listIterator(openSpans.size());
+            List<Markup> endingSpans = spansEndingAt(transitionIndex);
+            for (Markup endingSpan : endingSpans) {
+                ListIterator<Markup> iterator = openSpans.listIterator(openSpans.size());
                 while (iterator.hasPrevious()) {
-                    Object openSpan = iterator.previous();
+                    Markup openSpan = iterator.previous();
                     // If an ending span has a matching open span, consider it as a closing
                     // span and remove the open span, and proceed to next ending span.
                     if (openSpan == endingSpan) {
                         iterator.remove();
-                        Tag markup = appliedSpans.get(endingSpan);
-                        html.append(Constants._LT + markup.getTag() + Constants.GT);
+                        endingSpan.convert(html, htmlConverter, false);
                         break;
                     }
                 }
             }
 
-            List<Object> startingSpans = getSpansStartingAt(transitionIndex);
-            for (Object startingSpan : startingSpans) {
-                if (appliedSpans.containsKey(startingSpan)) {
-                    Tag markup = appliedSpans.get(startingSpan);
-                    html.append(Constants.LT + markup.getTag() + Constants.GT);
-                    // Consider a starting span as an opening span.
-                    openSpans.add(startingSpan);
-                }
-            }
-            html.append(text.subSequence(processed, transitionIndex));
             processed = transitionIndex;
         }
         if (openSpans.isEmpty())
@@ -210,14 +226,14 @@ public class RichTextManager {
 
     public <V> void onMarkupMenuClicked(int markupType, @Nullable V value) {
 
-        Tag prototype = prototypes.get(markupType);
+        Markup prototype = prototypes.get(markupType);
         if (prototype == null)
             throw new IllegalArgumentException("The given markupType " + markupType + " is not registered");
 
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
         boolean toggled = false;
-        for (Tag existing : getAppliedMarkups()) {
+        for (Markup existing : getAppliedMarkups()) {
             if (!prototype.canExistWith(existing.getType())) {
                 remove(existing, start, end);
                 if (existing.getType() == prototype.getType())
@@ -229,12 +245,12 @@ public class RichTextManager {
             apply(markupType, value);
     }
 
-    private <V> Tag createMarkup(int markupType, V value) {
+    private <V> Markup createMarkup(int markupType, V value) {
         return prototypes.get(markupType);
     }
 
     private TextWatcher textWatcher = new TextWatcher() {
-        private List<Tag> markupMarks;
+        private List<Markup> markupMarks;
         private int replacedLength;
 
         @Override
@@ -257,8 +273,8 @@ public class RichTextManager {
         @Override
         public void afterTextChanged(Editable s) {
             if (markupMarks != null) {
-                for (Tag markup : markupMarks) {
-                    int spanStart = s.getSpanStart(markup.getSpan());
+                for (Markup markup : markupMarks) {
+                    int spanStart = markup.getSpanStart(s);
                     s.removeSpan(markup);
                     s.setSpan(markup, spanStart, replacedLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
@@ -267,4 +283,14 @@ public class RichTextManager {
         }
     };
 
+    private static class SpanTransition {
+        List<Markup> startingSpans;
+        List<Markup> endingSpans;
+
+        SpanTransition() {
+            startingSpans = new LinkedList<>();
+            endingSpans = new LinkedList<>();
+        }
+
+    }
 }
