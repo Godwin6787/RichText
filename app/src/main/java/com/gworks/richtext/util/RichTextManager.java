@@ -60,6 +60,7 @@ public class RichTextManager {
     }
 
     private void applyInternal(Markup markup, int from, int to) {
+
         markup.apply(editText.getText(), from, to,
                 from == to ? Spannable.SPAN_MARK_MARK : Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
@@ -138,12 +139,15 @@ public class RichTextManager {
     }
 
     public List<Markup> getAppliedMarkups(int from, int to) {
+
         ArrayList<Markup> markups = new ArrayList<>();
         Set<Markup> startedTags = new HashSet<>();
-        for (int i = from; i < to; i++) {
-            List<Markup> startingTags = getSpansStartingAt(i);
+        for (int i = from; i <= to; i++) {
+            List<Markup> startingTags = spansStartingAt(i);
+            if(startingTags != null)
             startedTags.addAll(startingTags);
-            List<Markup> endingTags = getSpansEndingAt(i);
+            List<Markup> endingTags = spansEndingAt(i);
+            if(endingTags != null)
             for (Markup endingTag : endingTags)
                 if (startedTags.contains(endingTag)) {
                     markups.add(endingTag);
@@ -153,22 +157,24 @@ public class RichTextManager {
         return markups;
     }
 
+    @Nullable
     public List<Markup> getSpansStartingAt(int index) {
         return Collections.unmodifiableList(spansStartingAt(index));
     }
 
+    @Nullable
     public List<Markup> getSpansEndingAt(int index) {
         return Collections.unmodifiableList(spansEndingAt(index));
     }
 
     private List<Markup> spansStartingAt(int index) {
         SpanTransition transition = spanTransitions.get(index);
-        return (transition != null)?transition.startingSpans:Collections.<Markup>emptyList();
+        return (transition != null)?transition.startingSpans:null;
     }
 
     private List<Markup> spansEndingAt(int index) {
         SpanTransition transition = spanTransitions.get(index);
-        return (transition != null)?transition.endingSpans:Collections.<Markup>emptyList();
+        return (transition != null)?transition.endingSpans:null;
     }
 
     public String getPlainText() {

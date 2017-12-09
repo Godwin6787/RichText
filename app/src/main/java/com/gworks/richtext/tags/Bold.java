@@ -20,7 +20,6 @@ import android.graphics.Typeface;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
-
 import com.gworks.richtext.util.MarkupConverter;
 
 /**
