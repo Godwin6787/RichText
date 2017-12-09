@@ -23,10 +23,8 @@ import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.SparseArray;
 import android.widget.EditText;
-
 import com.gworks.richtext.tags.AttributedTag;
 import com.gworks.richtext.tags.Markup;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -164,11 +162,13 @@ public class RichTextManager {
     }
 
     private List<Markup> spansStartingAt(int index) {
-        return spanTransitions.get(index).startingSpans;
+        SpanTransition transition = spanTransitions.get(index);
+        return (transition != null)?transition.startingSpans:Collections.<Markup>emptyList();
     }
 
     private List<Markup> spansEndingAt(int index) {
-        return spanTransitions.get(index).endingSpans;
+        SpanTransition transition = spanTransitions.get(index);
+        return (transition != null)?transition.endingSpans:Collections.<Markup>emptyList();
     }
 
     public String getPlainText() {
