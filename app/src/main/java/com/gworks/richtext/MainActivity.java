@@ -18,12 +18,44 @@ package com.gworks.richtext;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import com.gworks.richtext.tags.Bold;
+import com.gworks.richtext.tags.Italic;
+import com.gworks.richtext.widget.RichEditText;
 
 public class MainActivity extends AppCompatActivity {
+
+    RichEditText editText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.edt_layout);
+
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        editText = findViewById(R.id.editText);
+        editText.registerMarkup(Bold.ID,new Bold());
+        editText.registerMarkup(Italic.ID,new Italic());
+        LinearLayout layout = findViewById(R.id.buttonLayout);
+        layout.addView(newMarkupButton("Bold",Bold.ID));
+        layout.addView(newMarkupButton("Italics",Italic.ID));
+    }
+
+    private Button newMarkupButton(String label, int mId){
+
+        Button b = new Button(this);
+        b.setText(label);
+        b.setTag(mId);
+        b.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                editText.onMarkupClicked((int)view.getTag());
+            }
+        });
+        return b;
     }
 }
