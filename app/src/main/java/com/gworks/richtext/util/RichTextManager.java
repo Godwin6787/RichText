@@ -23,8 +23,10 @@ import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.SparseArray;
 import android.widget.EditText;
-import com.gworks.richtext.tags.AttributedTag;
+
+import com.gworks.richtext.tags.AttributedMarkup;
 import com.gworks.richtext.tags.Markup;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,7 +38,11 @@ import java.util.Set;
 public class RichTextManager {
 
     private static final String TAG = "@RichTextManager";
+
+    // The text view which acts as rich text view.
     private EditText editText;
+
+    //Mapping between the index and its span transitions in the text.
     private SparseArray<SpanTransition> spanTransitions;
     private SparseArray<Markup> prototypes;
 
@@ -55,14 +61,118 @@ public class RichTextManager {
         applyInternal(createMarkup(markupType, value), editText.getSelectionStart(), editText.getSelectionEnd());
     }
 
+    /**
+     * Applies the given markup in the given range.
+     *
+     * @param markup
+     * @param from
+     * @param to
+     */
     public void apply(Markup markup, int from, int to) {
         applyInternal(markup, from, to);
     }
 
+    /**
+     * Applies the given markup in the given range.
+     *
+     * @param markup
+     * @param from
+     * @param to
+     */
     private void applyInternal(Markup markup, int from, int to) {
-
         markup.apply(editText.getText(), from, to,
                 from == to ? Spannable.SPAN_MARK_MARK : Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        addToSpanTransitions(markup, from, to);
+    }
+
+    public void remove(int markupType) {
+        remove(markupType, editText.getSelectionStart(), editText.getSelectionEnd());
+    }
+
+    public void remove(int markupType, int from, int to) {
+        for (Markup appliedMarkup : getAppliedMarkups(from, to))
+            if (appliedMarkup.getType() == markupType)
+                removeInternal(appliedMarkup, from, to);
+    }
+
+    /**
+     * Removes all the markups from the current selection if any.
+     */
+    public void removeAll() {
+        removeAll(editText.getSelectionStart(), editText.getSelectionEnd());
+    }
+
+    /**
+     * Removes all the markups from the given range.
+     *
+     * @param from
+     * @param to
+     */
+    public void removeAll(int from, int to) {
+        for (Markup appliedMarkup : getAppliedMarkups(from, to))
+            removeInternal(appliedMarkup, from, to);
+    }
+
+    /**
+     * Removes the given markup from the given range. If the markup spans outside the
+     * given range the markup is retained in the outer region if the markup is splittable.
+     * Otherwise the markup is removed entirely.
+     *
+     * @param markup
+     * @param from
+     * @param to
+     */
+    private void removeInternal(Markup markup, int from, int to) {
+        if (markup != null) {
+            Spannable text = editText.getText();
+            int start = text.getSpanStart(markup);
+            int end = text.getSpanEnd(markup);
+
+            // If the markup is really applied in the text.
+            if (start >= 0) {
+
+                markup.remove(editText.getText());
+                removeFromSpanTransitions(markup, from, to);
+
+                //If the markup is splittable apply in the outer region.
+                if (markup.isSplittable()) {
+                    boolean reused = false;
+                    if (start < from) {
+                        //The removed markup is reused here.
+                        applyInternal(markup, start, from);
+                        reused = true;
+                    }
+                    if (end > to) {
+                        Object value = markup instanceof AttributedMarkup ? ((AttributedMarkup) markup).getValue() : null;
+                        //If not reused above reuse here.
+                        applyInternal(reused ? createMarkup(markup.getType(), value) : markup, to, end);
+                    }
+                }
+            }
+        }
+    }
+
+    private void removeFromSpanTransitions(Markup markup, int from, int to) {
+
+        SpanTransition transitionFrom = spanTransitions.get(from);
+        if (transitionFrom != null)
+            transitionFrom.startingSpans.remove(markup);
+
+        SpanTransition transitionTo = spanTransitions.get(to);
+        if (transitionTo != null)
+            transitionTo.endingSpans.remove(markup);
+
+//        List<Markup> startingSpans = spansStartingAt(from);
+//        if (startingSpans != null)
+//            startingSpans.remove(markup);
+//
+//        List<Markup> endingSpans = spansEndingAt(to);
+//        if (endingSpans != null)
+//            endingSpans.remove(markup);
+
+    }
+
+    private void addToSpanTransitions(Markup markup, int from, int to) {
 
         SpanTransition transitionFrom = spanTransitions.get(from);
         if (transitionFrom == null)
@@ -74,47 +184,6 @@ public class RichTextManager {
             spanTransitions.put(to, transitionTo = new SpanTransition());
         transitionTo.endingSpans.add(markup);
 
-    }
-
-    public void remove(int markupType) {
-        remove(markupType, editText.getSelectionStart(), editText.getSelectionEnd());
-    }
-
-    public void remove(int markupType, int from, int to) {
-        for (Markup appliedMarkup : getAppliedMarkups(from, to))
-            if (appliedMarkup.getType() == markupType)
-                remove(appliedMarkup, from, to);
-    }
-
-    public void removeAll() {
-        removeAll(editText.getSelectionStart(), editText.getSelectionEnd());
-    }
-
-    public void removeAll(int from, int to) {
-        for (Markup appliedMarkup : getAppliedMarkups(from, to))
-            remove(appliedMarkup, from, to);
-    }
-
-    private void remove(Markup markup, int from, int to) {
-        if (markup != null) {
-            Spannable text = editText.getText();
-            int start = text.getSpanStart(markup);
-            int end = text.getSpanEnd(markup);
-            removeInternal(markup, start, end);
-
-            if (markup.isSplittable()) {
-                if (start < from)
-                    applyInternal(markup, start, from);
-                if (end > to)
-                    applyInternal(createMarkup(markup.getType(), null), to, end);
-            }
-        }
-    }
-
-    private void removeInternal(Markup markup, int from, int to) {
-        markup.remove(editText.getText());
-        spanTransitions.get(from).startingSpans.remove(markup);
-        spanTransitions.get(to).endingSpans.remove(markup);
     }
 
     public <T> void update(int markupType, T value) {
@@ -134,57 +203,116 @@ public class RichTextManager {
         return editText.getText().getSpans(from, to, markupClass).length > 0;
     }
 
-    public List<Markup> getAppliedMarkups() {
-        return getAppliedMarkups(editText.getSelectionStart(), editText.getSelectionEnd());
+    private boolean isApplied(Markup markup) {
+        return editText.getText().getSpanStart(markup) >= 0;
     }
 
+    private boolean isApplied(Markup markup, int from, int to) {
+        int start = editText.getText().getSpanStart(markup);
+        int end = editText.getText().getSpanEnd(markup);
+        return (start > 0 && start >= from && start < to) &&
+                (end > 0 && end > from && end <= to);
+    }
+
+    /**
+     * Returns all the markups applied in the current selection if any.
+     *
+     * @return
+     */
+    public List<Markup> getAppliedMarkups() {
+        return getAppliedMarkups(editText.getSelectionStart(), editText.getSelectionEnd() + 1);
+    }
+
+    /**
+     * Returns all the markups applied strictly inside the given range [from, to).
+     *
+     * @param from from inclusive
+     * @param to to exclusive
+     * @return
+     */
     public List<Markup> getAppliedMarkups(int from, int to) {
 
-        ArrayList<Markup> markups = new ArrayList<>();
-        Set<Markup> startedTags = new HashSet<>();
-        for (int i = from; i <= to; i++) {
-            List<Markup> startingTags = spansStartingAt(i);
-            if(startingTags != null)
-            startedTags.addAll(startingTags);
-            List<Markup> endingTags = spansEndingAt(i);
-            if(endingTags != null)
-            for (Markup endingTag : endingTags)
-                if (startedTags.contains(endingTag)) {
-                    markups.add(endingTag);
-                    startedTags.remove(endingTag);
+        ArrayList<Markup> result = new ArrayList<>();
+        Set<Markup> startedMarkups = new HashSet<>(); // To keep track of the started markups.
+
+        for (int i = from; i < to; i++) {
+
+            List<Markup> startingMarkups = spansStartingAt(i);
+            if (startingMarkups != null)
+                startedMarkups.addAll(startingMarkups);
+
+            List<Markup> endingMarkups = spansEndingAt(i);
+            if (endingMarkups != null) {
+                for (Markup endingMarkup : endingMarkups) {
+                    // Only markups started in the given range are added to the result.
+                    if (startedMarkups.contains(endingMarkup)) {
+                        result.add(endingMarkup);
+                        startedMarkups.remove(endingMarkup);
+                    }
                 }
+            }
         }
-        return markups;
+        return result;
     }
 
-    @Nullable
+    /**
+     * Returns the markups starting at the given index.
+     *
+     * @param index
+     * @return unmodifiable list of markups
+     */
     public List<Markup> getSpansStartingAt(int index) {
-        return Collections.unmodifiableList(spansStartingAt(index));
+        List<Markup> spans = spansStartingAt(index);
+        return spans == null ? Collections.<Markup>emptyList() : Collections.unmodifiableList(spans);
+    }
+
+    /**
+     * Returns the markups ending at the given index.
+     *
+     * @param index
+     * @return unmodifiable list of markups
+     */
+    public List<Markup> getSpansEndingAt(int index) {
+        List<Markup> spans = spansEndingAt(index);
+        return spans == null ? Collections.<Markup>emptyList() : Collections.unmodifiableList(spans);
     }
 
     @Nullable
-    public List<Markup> getSpansEndingAt(int index) {
-        return Collections.unmodifiableList(spansEndingAt(index));
-    }
-
     private List<Markup> spansStartingAt(int index) {
         SpanTransition transition = spanTransitions.get(index);
-        return (transition != null)?transition.startingSpans:null;
+        return (transition != null) ? transition.startingSpans : null;
     }
 
+    @Nullable
     private List<Markup> spansEndingAt(int index) {
         SpanTransition transition = spanTransitions.get(index);
-        return (transition != null)?transition.endingSpans:null;
+        return (transition != null) ? transition.endingSpans : null;
     }
 
+    /**
+     * Returns the rich text in the text view as plain text (i.e. String).
+     *
+     * @return
+     */
     public String getPlainText() {
         return editText.getText().toString();
     }
 
+    /**
+     * Returns the html equivalent of the rich text in the text view.
+     *
+     * @return
+     */
     public String getHtml() {
         return getHtml(null);
     }
 
+    /**
+     * Returns the html equivalent of the rich text in the text view.
+     *
+     * @param unknownMarkupHandler the handler to handle the unknown markups.
+     * @return
+     */
     public String getHtml(MarkupConverter.UnknownMarkupHandler unknownMarkupHandler) {
 
         Spanned text = editText.getText();
@@ -230,6 +358,13 @@ public class RichTextManager {
         else throw new IllegalStateException("Spans are not well formed");
     }
 
+    /**
+     * Call this when a markup menu item is clicked. This method takes care of toggling the
+     * markup, splitting the markup, updating the markup, etc.
+     * @param markupType
+     * @param value
+     * @param <V>
+     */
     public <V> void onMarkupMenuClicked(int markupType, @Nullable V value) {
 
         Markup prototype = prototypes.get(markupType);
@@ -241,13 +376,14 @@ public class RichTextManager {
         boolean toggled = false;
         for (Markup existing : getAppliedMarkups()) {
             if (!prototype.canExistWith(existing.getType())) {
-                remove(existing, start, end);
+                removeInternal(existing, start, end);
                 if (existing.getType() == prototype.getType())
                     // If it can not exist with itself toggle.
                     toggled = true;
             }
         }
-        if (prototype instanceof AttributedTag || !toggled)
+        // Attributed markups are updated (reapplied) hence always .
+        if (prototype instanceof AttributedMarkup || !toggled)
             apply(markupType, value);
     }
 
@@ -289,8 +425,15 @@ public class RichTextManager {
         }
     };
 
+    /**
+     * Class representing a span transition in the text at a given index.
+     */
     private static class SpanTransition {
+
+        //spans starting at this span transition.
         List<Markup> startingSpans;
+
+        //spans ending at this span transition.
         List<Markup> endingSpans;
 
         SpanTransition() {

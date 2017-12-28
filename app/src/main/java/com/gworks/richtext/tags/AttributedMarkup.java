@@ -16,19 +16,11 @@
 
 package com.gworks.richtext.tags;
 
-import android.support.annotation.NonNull;
-
-import java.util.Map;
-
 /**
  * Created by Godwin Lewis on 5/11/2017.
  */
 
-public interface AttributedTag<V> extends Markup {
-
-   @NonNull Map<String, String> getAttributes();
-
-   String valueOf(String attribute);
+public interface AttributedMarkup<V> extends Markup {
 
    V getValue();
 

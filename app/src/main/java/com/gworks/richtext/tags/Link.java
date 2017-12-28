@@ -16,30 +16,22 @@
 
 package com.gworks.richtext.tags;
 
-import android.support.annotation.NonNull;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.style.URLSpan;
 
-import com.gworks.richtext.Constants;
 import com.gworks.richtext.util.MarkupConverter;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by Godwin Lewis on 5/11/2017.
  */
 
-public class Link extends URLSpan implements AttributedTag<String> {
+public class Link extends URLSpan implements AttributedMarkup<String> {
 
     public static final int ID = 4;
-    private Map<String, String> attributes;
 
     public Link(String url) {
         super(url);
-        attributes = new HashMap<>();
-        attributes.put(Constants.ATTR_URL, url);
     }
 
     @Override
@@ -57,17 +49,6 @@ public class Link extends URLSpan implements AttributedTag<String> {
         return anotherType != getType();
     }
 
-    @NonNull
-    @Override
-    public Map<String, String> getAttributes() {
-        return attributes;
-    }
-
-    @Override
-    public String valueOf(String attribute) {
-        return attributes.get(attribute);
-    }
-
     @Override
     public void apply(Spannable text, int from, int to, int flags) {
         text.setSpan(this, from, to, flags);
@@ -80,7 +61,7 @@ public class Link extends URLSpan implements AttributedTag<String> {
 
     @Override
     public String getValue() {
-        return attributes.get(Constants.ATTR_URL);
+        return getURL();
     }
 
     @Override
