@@ -16,8 +16,6 @@
 
 package com.gworks.richtext.tags;
 
-import android.text.Spannable;
-import android.text.Spanned;
 import android.text.style.URLSpan;
 
 import com.gworks.richtext.util.MarkupConverter;
@@ -26,12 +24,10 @@ import com.gworks.richtext.util.MarkupConverter;
  * Created by Godwin Lewis on 5/11/2017.
  */
 
-public class Link extends URLSpan implements AttributedMarkup<String> {
-
-    public static final int ID = 4;
+public class Link extends SingleSpanAttributedMarkup<String> {
 
     public Link(String url) {
-        super(url);
+        super(new URLSpan(url), url);
     }
 
     @Override
@@ -40,37 +36,7 @@ public class Link extends URLSpan implements AttributedMarkup<String> {
     }
 
     @Override
-    public boolean canExistWith(Class<? extends Markup> anotherType) {
-        return anotherType != getClass();
-    }
-
-    @Override
-    public void apply(Spannable text, int from, int to, int flags) {
-        text.setSpan(this, from, to, flags);
-    }
-
-    @Override
-    public void remove(Spannable text) {
-        text.removeSpan(this);
-    }
-
-    @Override
-    public String getAttributes() {
-        return getURL();
-    }
-
-    @Override
     public boolean isSplittable() {
         return false;
-    }
-
-    @Override
-    public int getSpanStart(Spanned text) {
-        return text.getSpanStart(this);
-    }
-
-    @Override
-    public int getSpanEnd(Spanned text) {
-        return text.getSpanEnd(this);
     }
 }

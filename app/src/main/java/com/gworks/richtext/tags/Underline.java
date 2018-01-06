@@ -16,8 +16,7 @@
 
 package com.gworks.richtext.tags;
 
-import android.graphics.Typeface;
-import android.text.style.StyleSpan;
+import android.text.style.UnderlineSpan;
 
 import com.gworks.richtext.util.MarkupConverter;
 
@@ -25,10 +24,10 @@ import com.gworks.richtext.util.MarkupConverter;
  * Created by Godwin Lewis on 5/9/2017.
  */
 
-public class Bold extends StyleMarkup {
+public class Underline extends StyleMarkup {
 
-    public Bold() {
-        super(new StyleSpan(Typeface.BOLD));
+    public Underline() {
+        super(new UnderlineSpan());
     }
 
     @Override

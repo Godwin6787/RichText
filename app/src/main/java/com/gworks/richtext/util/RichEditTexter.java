@@ -72,7 +72,7 @@ public class RichEditTexter extends RichTexter {
      */
     private void applyInternal(Markup markup, int from, int to) {
         EditText editText = getRichTextView();
-        markup.apply(editText.getText(), from, to,
+        markup.applyInternal(editText.getText(), from, to,
                 from == to ? Spannable.SPAN_MARK_MARK : Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         addToSpanTransitions(markup, from, to);
     }
@@ -120,14 +120,15 @@ public class RichEditTexter extends RichTexter {
         if (markup != null) {
             EditText editText = getRichTextView();
             Spannable text = editText.getText();
-            int start = text.getSpanStart(markup);
-            int end = text.getSpanEnd(markup);
+            int start = markup.getSpanStart(text);
+            int end = markup.getSpanEnd(text);
 
             // If the markup is really applied in the text.
             if (start >= 0) {
 
-                markup.remove(editText.getText());
-                removeFromSpanTransitions(markup, from, to);
+                //First remove from the old range and reapply if splittable.
+                removeFromSpanTransitions(markup, start, end);
+                markup.removeInternal(text);
 
                 //If the markup is splittable apply in the outer region.
                 if (markup.isSplittable()) {
@@ -164,7 +165,7 @@ public class RichEditTexter extends RichTexter {
         int start = editText.getSelectionStart();
         int end = editText.getSelectionEnd();
         boolean toggled = false;
-        for (Markup existing : getAppliedMarkups()) {
+        for (Markup existing : getAppliedMarkups(start, end)) {
             if (!existing.canExistWith(markupType)) {
                 removeInternal(existing, start, end);
                 if (existing.getClass() == markupType)

@@ -1,9 +1,11 @@
 package com.gworks.richtext.util;
 
 import com.gworks.richtext.tags.Bold;
+import com.gworks.richtext.tags.Font;
 import com.gworks.richtext.tags.Italic;
 import com.gworks.richtext.tags.Link;
 import com.gworks.richtext.tags.Markup;
+import com.gworks.richtext.tags.Underline;
 
 /**
  * Created by durgadass on 15/7/17.
@@ -17,11 +19,19 @@ public class MarkupConverter {
         this.unknownMarkupHandler = unknownMarkupHandler;
     }
 
-    public boolean convertMarkup(StringBuilder sb, Bold boldMarkup, boolean begin){
+    public boolean convertMarkup(StringBuilder sb, Bold boldMarkup, boolean begin) {
         return false;
     }
 
     public boolean convertMarkup(StringBuilder sb, Italic italicMarkup, boolean begin){
+        return false;
+    }
+
+    public boolean convertMarkup(StringBuilder sb, Underline underlineMarkup, boolean begin){
+        return false;
+    }
+
+    public boolean convertMarkup(StringBuilder sb, Font fontMarkup, boolean begin){
         return false;
     }
 

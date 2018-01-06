@@ -25,7 +25,31 @@ import com.gworks.richtext.util.MarkupConverter;
  * Created by Godwin Lewis on 5/9/2017.
  */
 
-public interface Markup {
+public abstract class Markup {
+
+    public final void applyInternal(Spannable text, int from ,int to, int flags) {
+        text.setSpan(this, from, to, flags);
+        apply(text, from, to, flags);
+    }
+
+    public final void removeInternal(Spannable text) {
+        text.removeSpan(this);
+        remove(text);
+    }
+
+    /**
+     * Returns the starting index of this markup in the given text. Returns -1 if not applied.
+     */
+    public int getSpanStart(Spanned text){
+        return text.getSpanStart(this);
+    }
+
+    /**
+     * Returns the ending index of this markup in the given text. Returns -1 if not applied.
+     */
+    public int getSpanEnd(Spanned text){
+        return text.getSpanEnd(this);
+    }
 
     /**
      *
@@ -33,14 +57,12 @@ public interface Markup {
      * @param converter
      * @param begin
      */
-    void convert(StringBuilder sb, MarkupConverter converter, boolean begin);
+    public abstract void convert(StringBuilder sb, MarkupConverter converter, boolean begin);
 
     /**
      * Tells whether this markup can exist with the given markup type.
-     * @param anotherType
-     * @return
      */
-    boolean canExistWith(Class<? extends Markup> anotherType);
+    public abstract boolean canExistWith(Class<? extends Markup> anotherType);
 
     /**
      * Applies this markup to the given text in given range [from, to).
@@ -49,31 +71,15 @@ public interface Markup {
      * @param to to exclusive
      * @param flags
      */
-    void apply(Spannable text, int from ,int to, int flags);
+    protected abstract void apply(Spannable text, int from ,int to, int flags);
 
     /**
      * Removes this markup from the given text.
-     * @param text
      */
-    void remove(Spannable text);
-
-    /**
-     * Returns the starting index of this markup in the given text. Returns -1 if not applied.
-     * @param text
-     * @return
-     */
-    int getSpanStart(Spanned text);
-
-    /**
-     * Returns the ending index of this markup in the given text. Returns -1 if not applied.
-     * @param text
-     * @return
-     */
-    int getSpanEnd(Spanned text);
+    protected abstract void remove(Spannable text);
 
     /**
      * Tells whether this markup type is splittable.
-     * @return
      */
-    boolean isSplittable();
+    public abstract boolean isSplittable();
 }

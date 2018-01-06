@@ -27,12 +27,12 @@ package com.gworks.richtext.tags;
  * while implementing this interface and single param need not be wrapped.
  * @param <ATTR>
  */
-public interface AttributedMarkup<ATTR> extends Markup {
+public abstract class AttributedMarkup<ATTR> extends Markup {
 
    /**
     * Returns the attributes of this {@link AttributedMarkup}.
     * @return
     */
-   ATTR getAttributes();
+   public abstract ATTR getAttributes();
 
 }
