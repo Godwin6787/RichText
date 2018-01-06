@@ -12,13 +12,16 @@ import com.gworks.richtext.util.MarkupConverter;
  * Created by durgadass on 15/7/17.
  */
 
-public class Font implements Markup {
+public class Font implements AttributedMarkup<Font.Attributes> {
 
     private TypefaceSpan typefaceSpan;
     private AbsoluteSizeSpan sizeSpan;
     private ForegroundColorSpan colorSpan;
 
+    private Attributes attributes;
+
     public Font(Attributes attributes){
+        this.attributes = attributes;
         typefaceSpan = new TypefaceSpan(attributes.typeface);
         sizeSpan = new AbsoluteSizeSpan(attributes.size, true);
         colorSpan = new ForegroundColorSpan(attributes.color);
@@ -30,13 +33,8 @@ public class Font implements Markup {
     }
 
     @Override
-    public int getType() {
-        return 0;
-    }
-
-    @Override
-    public boolean canExistWith(int anotherType) {
-        return false;
+    public boolean canExistWith(Class<? extends Markup> anotherType) {
+        return anotherType != getClass();
     }
 
     @Override
@@ -66,6 +64,11 @@ public class Font implements Markup {
     @Override
     public boolean isSplittable() {
         return true;
+    }
+
+    @Override
+    public Attributes getAttributes() {
+        return attributes;
     }
 
     public static class Attributes {

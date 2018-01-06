@@ -27,19 +27,53 @@ import com.gworks.richtext.util.MarkupConverter;
 
 public interface Markup {
 
+    /**
+     *
+     * @param sb
+     * @param converter
+     * @param begin
+     */
     void convert(StringBuilder sb, MarkupConverter converter, boolean begin);
 
-    int getType();
+    /**
+     * Tells whether this markup can exist with the given markup type.
+     * @param anotherType
+     * @return
+     */
+    boolean canExistWith(Class<? extends Markup> anotherType);
 
-    boolean canExistWith(int anotherType);
-
+    /**
+     * Applies this markup to the given text in given range [from, to).
+     * @param text
+     * @param from from inclusive
+     * @param to to exclusive
+     * @param flags
+     */
     void apply(Spannable text, int from ,int to, int flags);
 
+    /**
+     * Removes this markup from the given text.
+     * @param text
+     */
     void remove(Spannable text);
 
+    /**
+     * Returns the starting index of this markup in the given text. Returns -1 if not applied.
+     * @param text
+     * @return
+     */
     int getSpanStart(Spanned text);
 
+    /**
+     * Returns the ending index of this markup in the given text. Returns -1 if not applied.
+     * @param text
+     * @return
+     */
     int getSpanEnd(Spanned text);
 
+    /**
+     * Tells whether this markup type is splittable.
+     * @return
+     */
     boolean isSplittable();
 }

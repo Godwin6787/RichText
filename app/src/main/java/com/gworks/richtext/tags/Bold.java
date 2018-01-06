@@ -20,6 +20,7 @@ import android.graphics.Typeface;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
+
 import com.gworks.richtext.util.MarkupConverter;
 
 /**
@@ -28,7 +29,6 @@ import com.gworks.richtext.util.MarkupConverter;
 
 public class Bold extends StyleSpan implements Markup {
 
-    public static final int ID = 1;
 
     public Bold() {
         super(Typeface.BOLD);
@@ -38,15 +38,9 @@ public class Bold extends StyleSpan implements Markup {
     public void convert(StringBuilder sb, MarkupConverter converter, boolean begin) {
         converter.convertMarkup(sb, this, begin);
     }
-
     @Override
-    public int getType() {
-        return ID;
-    }
-
-    @Override
-    public boolean canExistWith(int markupId) {
-        return getType() != markupId;
+    public boolean canExistWith(Class<? extends Markup> anotherType) {
+        return anotherType != getClass();
     }
 
     @Override

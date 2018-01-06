@@ -26,8 +26,6 @@ import com.gworks.richtext.util.MarkupConverter;
 
 public class Italic extends StyleSpan implements Markup {
 
-    public static final int ID = 2;
-
     public Italic() {
         super(Typeface.ITALIC);
     }
@@ -38,13 +36,8 @@ public class Italic extends StyleSpan implements Markup {
     }
 
     @Override
-    public int getType() {
-        return ID;
-    }
-
-    @Override
-    public boolean canExistWith(int markupId) {
-        return getType() != markupId;
+    public boolean canExistWith(Class<? extends Markup> anotherType) {
+        return anotherType != getClass();
     }
 
     @Override

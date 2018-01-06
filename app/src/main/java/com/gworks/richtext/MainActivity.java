@@ -16,14 +16,16 @@
 
 package com.gworks.richtext;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
+
 import com.gworks.richtext.tags.Bold;
 import com.gworks.richtext.tags.Italic;
+import com.gworks.richtext.tags.Markup;
 import com.gworks.richtext.widget.RichEditText;
 
 public class MainActivity extends AppCompatActivity {
@@ -37,14 +39,12 @@ public class MainActivity extends AppCompatActivity {
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         editText = findViewById(R.id.editText);
-        editText.registerMarkup(Bold.ID,new Bold());
-        editText.registerMarkup(Italic.ID,new Italic());
         LinearLayout layout = findViewById(R.id.buttonLayout);
-        layout.addView(newMarkupButton("Bold",Bold.ID));
-        layout.addView(newMarkupButton("Italics",Italic.ID));
+        layout.addView(newMarkupButton("Bold",Bold.class));
+        layout.addView(newMarkupButton("Italics",Italic.class));
     }
 
-    private Button newMarkupButton(String label, int mId){
+    private Button newMarkupButton(String label, Class<?extends Markup> mId){
 
         Button b = new Button(this);
         b.setText(label);
@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         b.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                editText.onMarkupClicked((int)view.getTag());
+                editText.onMarkupClicked((Class<?extends Markup>)view.getTag());
             }
         });
         return b;

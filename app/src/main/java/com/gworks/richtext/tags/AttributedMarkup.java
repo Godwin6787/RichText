@@ -20,8 +20,19 @@ package com.gworks.richtext.tags;
  * Created by Godwin Lewis on 5/11/2017.
  */
 
-public interface AttributedMarkup<V> extends Markup {
+/**
+ * Represents an attributed markup or markup with parameters. It could be single
+ * param (like the url in Link markup) or a set of params (like style params in Font markup).
+ * Often set of params are wrapped in a single class and used as generic param <code>ATTR</code>
+ * while implementing this interface and single param need not be wrapped.
+ * @param <ATTR>
+ */
+public interface AttributedMarkup<ATTR> extends Markup {
 
-   V getValue();
+   /**
+    * Returns the attributes of this {@link AttributedMarkup}.
+    * @return
+    */
+   ATTR getAttributes();
 
 }

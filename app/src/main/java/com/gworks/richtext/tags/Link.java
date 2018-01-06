@@ -40,13 +40,8 @@ public class Link extends URLSpan implements AttributedMarkup<String> {
     }
 
     @Override
-    public int getType() {
-        return ID;
-    }
-
-    @Override
-    public boolean canExistWith(int anotherType) {
-        return anotherType != getType();
+    public boolean canExistWith(Class<? extends Markup> anotherType) {
+        return anotherType != getClass();
     }
 
     @Override
@@ -60,7 +55,7 @@ public class Link extends URLSpan implements AttributedMarkup<String> {
     }
 
     @Override
-    public String getValue() {
+    public String getAttributes() {
         return getURL();
     }
 

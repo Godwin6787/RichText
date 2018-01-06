@@ -3,8 +3,9 @@ package com.gworks.richtext.widget;
 import android.content.Context;
 import android.support.v7.widget.AppCompatEditText;
 import android.util.AttributeSet;
+
 import com.gworks.richtext.tags.Markup;
-import com.gworks.richtext.util.RichTextManager;
+import com.gworks.richtext.util.RichEditTexter;
 
 /**
  * Created by Godwin Lewis on 12/9/2017.
@@ -12,7 +13,7 @@ import com.gworks.richtext.util.RichTextManager;
 
 public class RichEditText extends AppCompatEditText{
 
-    private RichTextManager manager;
+    private RichEditTexter manager;
 
     public RichEditText(Context context) {
         super(context);
@@ -30,14 +31,10 @@ public class RichEditText extends AppCompatEditText{
     }
 
     private void init(){
-        manager = new RichTextManager(this);
+        manager = new RichEditTexter(this);
     }
 
-    public void registerMarkup(int id, Markup markup){
-        manager.registerMarkup(id,markup);
-    }
-
-    public void onMarkupClicked(int id){
+    public void onMarkupClicked(Class<? extends Markup> id){
         manager.onMarkupMenuClicked(id,null);
     }
 }
